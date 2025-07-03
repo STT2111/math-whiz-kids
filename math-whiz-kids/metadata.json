@@ -1,0 +1,6 @@
+{
+  "name": "Math Whiz Kids",
+  "description": "An interactive and fun application for kids to practice math. It uses AI to generate custom exercises based on topic and difficulty level, providing instant feedback to help learning.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

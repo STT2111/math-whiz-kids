@@ -31,12 +31,11 @@ if (!apiKey) {
 
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
-
 const generatePrompt = (settings: Settings, language: Language): string => {
-    const langInstruction = language === 'km' 
-        ? 'Generate the math problems in Khmer language. For word problems, use simple Khmer words appropriate for children.' 
+    const langInstruction = language === 'km'
+        ? 'Generate the math problems in Khmer language. For word problems, use simple Khmer words appropriate for children.'
         : 'Generate the math problems in English language.';
-    
+
     const topicInstruction = language === 'km' && settings.topic === 'Mixed'
         ? 'The topic is Mixed (ចម្រុះ), which includes Addition (បូក), Subtraction (ដក), Multiplication (គុណ), and Division (ចែក).'
         : `The topic is ${settings.topic}.`;

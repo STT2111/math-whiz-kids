@@ -4,24 +4,33 @@ import { GoogleGenAI } from "@google/genai";
 import { Settings, Exercise } from '../types';
 import { Language } from '../contexts/LanguageContext';
 
-let ai: GoogleGenAI | null = null;
+//let ai: GoogleGenAI | null = null;
 
-function getAiClient(): GoogleGenAI {
-    if (ai) {
-        return ai;
-    }
+//function getAiClient(): GoogleGenAI {
+    //if (ai) {
+        //return ai;
+    //}
 
     // This check is safer for browsers where `process` might not be defined.
     // It uses optional chaining and throws a specific error if the key is missing.
-    const apiKey = process?.env?.API_KEY;
+    //const apiKey = process?.env?.API_KEY;
 
-    if (!apiKey) {
-        throw new Error("Configuration Error: The API_KEY is not configured in the environment.");
-    }
+    //if (!apiKey) {
+        //throw new Error("Configuration Error: The API_KEY is not configured in the environment.");
+    //}
     
-    ai = new GoogleGenAI({ apiKey });
-    return ai;
+    //ai = new GoogleGenAI({ apiKey });
+    //return ai;
+//}
+// Check for and use the standard environment variables for the Gemini API key
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+if (!apiKey) {
+    throw new Error("GEMINI_API_KEY or GOOGLE_API_KEY environment variable not set");
 }
+
+const ai = new GoogleGenAI({ apiKey: apiKey });
+
 
 const generatePrompt = (settings: Settings, language: Language): string => {
     const langInstruction = language === 'km' 

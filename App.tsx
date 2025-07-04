@@ -1,12 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Settings, Exercise, UserAnswer, Status } from './types';
 import { generateExercises } from './services/geminiService';
 import { generateQuizPdf } from './services/pdfService';
+import { generateQuizImage } from './services/imageService';
 import SettingsForm from './components/SettingsForm';
 import ExerciseCard from './components/ExerciseCard';
 import ScoreDisplay from './components/ScoreDisplay';
 import Spinner from './components/Spinner';
-import { DownloadIcon, CogIcon, XMarkIcon } from './components/icons';
+import QuizSheet from './components/QuizSheet';
+import { DownloadIcon, PhotoIcon, CogIcon, XMarkIcon } from './components/icons';
 import { useLanguage, Language } from './contexts/LanguageContext';
 import { translations } from './i18n/locales';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
@@ -44,8 +46,18 @@ const App: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [includeAnswerKey, setIncludeAnswerKey] = useState<boolean>(true);
-    
+    const [isConfigured, setIsConfigured] = useState(true);
+
+    const quizSheetRef = useRef<HTMLDivElement>(null);
     const { language, t, tTopic, tDifficulty } = useLanguage();
+
+    useEffect(() => {
+        // This check relies on Vite's `define` feature replacing `process.env.API_KEY`.
+        // If the key wasn't available during the build, `process.env.API_KEY` will be undefined.
+        if (!process.env.API_KEY) {
+            setIsConfigured(false);
+        }
+    }, []);
 
     const handleGenerate = async (newSettings: Settings) => {
         setStatus(Status.LOADING);
@@ -101,7 +113,24 @@ const App: React.FC = () => {
             generateQuizPdf(settings, exercises, pdfTranslations, translatedTopic, translatedDifficulty, includeAnswerKey);
         }
     }, [settings, exercises, language, t, tTopic, tDifficulty, includeAnswerKey]);
+    
+    const handleDownloadImage = useCallback(() => {
+        if (quizSheetRef.current && settings) {
+            const fileName = `Math-Quiz-${settings.topic.replace(' ', '-')}-${settings.difficulty}`;
+            generateQuizImage(quizSheetRef.current, fileName);
+        }
+    }, [settings, includeAnswerKey]);
 
+    if (!isConfigured) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[var(--bg-start)] to-[var(--bg-end)] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+                 <div className="max-w-2xl w-full mx-auto bg-white p-8 rounded-2xl shadow-2xl border border-[var(--surface-border)]" role="alert">
+                    <h1 className="text-2xl font-black text-red-700">{t('errorConfigTitle')}</h1>
+                    <p className="mt-4 text-base text-gray-700">{t('errorConfig')}</p>
+                </div>
+            </div>
+        );
+    }
 
     const renderContent = () => {
         switch (status) {
@@ -125,6 +154,7 @@ const App: React.FC = () => {
                                 total={exercises.length}
                                 onReset={handleReset}
                                 onDownload={handleDownloadPdf}
+                                onDownloadImage={handleDownloadImage}
                                 includeAnswerKey={includeAnswerKey}
                                 onIncludeAnswerKeyChange={setIncludeAnswerKey}
                            />
@@ -157,6 +187,13 @@ const App: React.FC = () => {
                                         className="flex-shrink-0 bg-[var(--secondary)] text-[var(--secondary-text)] p-3 rounded-lg shadow-md hover:bg-[var(--secondary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--secondary)] transition-transform transform hover:scale-105"
                                     >
                                         <DownloadIcon className="h-6 w-6" />
+                                    </button>
+                                    <button
+                                        onClick={handleDownloadImage}
+                                        aria-label={t('downloadImage')}
+                                        className="flex-shrink-0 bg-[var(--secondary)] text-[var(--secondary-text)] p-3 rounded-lg shadow-md hover:bg-[var(--secondary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--secondary)] transition-transform transform hover:scale-105"
+                                    >
+                                        <PhotoIcon className="h-6 w-6" />
                                     </button>
                                 </div>
                                 <div className="mt-2 pr-1 text-right">
@@ -219,6 +256,9 @@ const App: React.FC = () => {
                     {status !== Status.CHECKED && <SettingsForm onGenerate={handleGenerate} isLoading={status === Status.LOADING} />}
                     {renderContent()}
                 </main>
+            </div>
+            <div className="absolute -left-[9999px] top-0" aria-hidden="true">
+                <QuizSheet ref={quizSheetRef} settings={settings} exercises={exercises} includeAnswerKey={includeAnswerKey} />
             </div>
         </div>
     );

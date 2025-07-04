@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI } from "@google/genai";
 import { Settings, Exercise } from '../types';
 import { Language } from '../contexts/LanguageContext';
